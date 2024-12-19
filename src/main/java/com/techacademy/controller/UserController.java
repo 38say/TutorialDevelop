@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.techacademy.entity.User;
 import com.techacademy.service.UserService;
 
+import jakarta.validation.Valid;
+
 @Controller
 @RequestMapping("user")
 public class UserController {
@@ -42,7 +44,7 @@ public class UserController {
         return "user/register";
     }
 
-    // ----- 変更ここから -----
+
     /** User登録処理 */
     @PostMapping("/register")
     public String postRegister(@Validated User user, BindingResult res, Model model) {
@@ -55,20 +57,29 @@ public class UserController {
         // 一覧画面にリダイレクト
         return "redirect:/user/list";
     }
-    // ----- 変更ここまで -----
+
 
     /** User更新画面を表示 */
     @GetMapping("/update/{id}/")
-    public String getUser(@PathVariable("id") Integer id, Model model) {
-        // Modelに登録
-        model.addAttribute("user", service.getUser(id));
+    public String getUser(@PathVariable("id") Integer id,User user, Model model) {
+        if (id != null) {
+            // 一覧画面から遷移した場合
+            model.addAttribute("user", service.getUser(id));
+        } else {
+            // postUser() から遷移した場合
+            model.addAttribute("user",user);
+        }
         // User更新画面に遷移
         return "user/update";
     }
 
     /** User更新処理 */
     @PostMapping("/update/{id}/")
-    public String postUser(User user) {
+    public String postUser(@PathVariable("id") Integer id,@Validated User user,BindingResult result,Model model) {
+        // エラーがあった場合はgetUser()を呼び出す
+        if (result.hasErrors()) {
+            return getUser(null,user,model);
+        }
         // User登録
         service.saveUser(user);
         // 一覧画面にリダイレクト
